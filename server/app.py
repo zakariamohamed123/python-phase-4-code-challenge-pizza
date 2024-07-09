@@ -22,9 +22,8 @@ api = Api(app)
 class Restaurants(Resource):
     def get(self):
         restaurants = [n.to_dict() for n in Restaurant.query.all()]
-
-        for hero in restaurants:
-            hero.pop('restaurant_pizzas', None)
+        for restaurant in restaurants:
+            restaurant.pop('restaurant_pizzas', None)
         return make_response(restaurants, 200)
 
 api.add_resource(Restaurants, "/restaurants")
@@ -51,14 +50,9 @@ api.add_resource(RestaurantByID, "/restaurants/<int:id>")
 class Pizzas(Resource):
     def get(self):
         response_dict_list = [n.to_dict() for n in Pizza.query.all()]
-
-        response = make_response(
-            response_dict_list,
-            200,
-        )
-
+        response = make_response(response_dict_list, 200)
         return response
-    
+
 api.add_resource(Pizzas, "/pizzas")
 
 class RestaurantPizzas(Resource):
@@ -76,7 +70,11 @@ class RestaurantPizzas(Resource):
             response_dict = restaurant_pizza.to_dict()
             return make_response(response_dict, 201)
         except ValueError as e:
-            return {"errors": ["Price must be between 1 and 30"]}, 400
+            # If the error message is about the price, return specific error message
+            if str(e) == "Price must be between 1 and 30":
+                return {"errors": ["Price must be between 1 and 30"]}, 400
+            # For other ValueError instances, return a general validation error
+            return {"errors": ["validation errors"]}, 400
         except Exception as e:
             return {"errors": ["validation errors"]}, 400
 
